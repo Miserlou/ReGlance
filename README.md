@@ -1,6 +1,6 @@
 # ReGlance
 
-A server-less replacement backend for Glance (Yahoo! Pipes + Parse).
+A server-less replacement backend for Glance (Yahoo! Pipes + Parse) and later [JankyGlance](https://github.com/Miserlou/JankyGlance).
 
 ## Features
 
