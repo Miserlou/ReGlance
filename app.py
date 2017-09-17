@@ -13,6 +13,10 @@ import time
 import uuid
 
 ##
+# AWS
+##
+
+##
 # Flask
 ##
 
@@ -20,7 +24,31 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
+    """ """
     return "Please supply a feed name!"
+
+@app.route('/record/', methods=["POST"])
+def record():
+    """ Record a Glance. """
+    return "Recorded!"
+
+@app.route('/popular/')
+def popular():
+    """ Returns a feed of the most read articles over the past 24 hours. """
+    return app.response_class(
+        response='[]',
+        status=200,
+        mimetype='application/json'
+    )
+
+@app.route('/recent/')
+def recent():
+    """ Returns a feed of the most recently read articles. """
+    return app.response_class(
+        response='[]',
+        status=200,
+        mimetype='application/json'
+    )
 
 @app.route('/<feed_name>')
 def feed(feed_name):
@@ -66,7 +94,7 @@ def parse_feeds(feed_list):
         for item in reversed(feed["items"]):
             entry_item = [{
               "title": item['title'],
-              "description": clean_html(item.get('summary','')).strip(),
+              "description": clean_html(item.get('summary','')).strip()[:200],
               "link": item['link'],
               "guid": str(uuid.uuid4()),
               "pubDate": item.get('published_parsed', None)

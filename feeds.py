@@ -7,6 +7,9 @@ FEEDS = {
         'http://rss.nytimes.com/services/xml/rss/nyt/US.xml',
         'http://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
         'http://feeds.bbci.co.uk/news/rss.xml',
+        'http://www.washingtonexaminer.com/rss/news',
+        'http://www.washingtonexaminer.com/rss/politics',
+        'http://www.wsj.com/xml/rss/3_7085.xml'
     ],
     'commentary': [
         'http://feeds.washingtonpost.com/rss/rss_election-2012',
@@ -20,6 +23,8 @@ FEEDS = {
         'http://www.rollingstone.com/politics.rss',
         'http://harpers.org/feed/',
         'http://www.technologyreview.com/stream/rss/'
+        'http://www.washingtonexaminer.com/rss/opinion',
+        'http://feeds.feedburner.com/reason/Articles'
     ],
     'hn': [
         'https://news.ycombinator.com/rss',
