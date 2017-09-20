@@ -39,16 +39,23 @@ def record():
     """ Record a Glance. """
 
     record = request.get_json()
-    if not record.has_key("url"):
+    if not record.has_key("url") or not record.has_key("title"):
         return app.response_class(
-            response={"fail": "POST must have `url`"},
+            response={"fail": "POST must have `url` and `title`"},
             status=400,
             mimetype='application/json'
         )
 
+    url = record['url']
+    title = record['title']
+
     today = datetime.now().day + datetime.now().month + datetime.now().year
     loaded = nodb.load(today, default={})
-    loaded[url] = loaded.get(url, 0) + 1
+    if loaded.has_key(url):
+        loaded[url]["glances"] = loaded[url]["glances"] + 1
+    else:
+        loaded[url]["glances"] = 1
+        loaded[url]["title"] = title
     nodb.save(today, loaded)
 
     return app.response_class(
