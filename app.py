@@ -1,8 +1,9 @@
 from datetime import datetime
 from email.Utils import formatdate
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from feeds import FEEDS
 from maya import MayaDT
+from nodb import NoDB
 from time import mktime
 from thefuture import Future
 
@@ -15,6 +16,12 @@ import uuid
 ##
 # AWS
 ##
+
+nodb = NoDB()
+nodb.bucket = "lmbda"
+nodb.index = "day"
+nodb.serializer = "json"
+nodb.cache = True
 
 ##
 # Flask
@@ -30,13 +37,35 @@ def hello():
 @app.route('/record/', methods=["POST"])
 def record():
     """ Record a Glance. """
-    return "Recorded!"
+
+    record = request.get_json()
+    if not record.has_key("url"):
+        return app.response_class(
+            response={"fail": "POST must have `url`"},
+            status=400,
+            mimetype='application/json'
+        )
+
+    today = datetime.now().day + datetime.now().month + datetime.now().year
+    loaded = nodb.load(today, default={})
+    loaded[url] = loaded.get(url, 0) + 1
+    nodb.save(today, loaded)
+
+    return app.response_class(
+        response={"success": True},
+        status=200,
+        mimetype='application/json'
+    )
 
 @app.route('/popular/')
 def popular():
     """ Returns a feed of the most read articles over the past 24 hours. """
+
+    today = datetime.now().day + datetime.now().month + datetime.now().year
+    loaded = nodb.load(today, default={})
+
     return app.response_class(
-        response='[]',
+        response='loaded',
         status=200,
         mimetype='application/json'
     )
