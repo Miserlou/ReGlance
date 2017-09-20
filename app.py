@@ -41,7 +41,9 @@ def record():
     record = request.get_json()
     if not record.has_key("url") or not record.has_key("title"):
         return app.response_class(
-            response={"fail": "POST must have `url` and `title`"},
+            response={
+                "fail": "POST must have `url` and `title`"
+                },
             status=400,
             mimetype='application/json'
         )
@@ -59,7 +61,9 @@ def record():
     nodb.save(today, loaded)
 
     return app.response_class(
-        response={"success": True},
+        response={
+            "success": True
+            },
         status=200,
         mimetype='application/json'
     )
@@ -72,7 +76,7 @@ def popular():
     loaded = nodb.load(today, default={})
 
     return app.response_class(
-        response='loaded',
+        response=loaded,
         status=200,
         mimetype='application/json'
     )
@@ -81,7 +85,7 @@ def popular():
 def recent():
     """ Returns a feed of the most recently read articles. """
     return app.response_class(
-        response='[]',
+        response=[],
         status=200,
         mimetype='application/json'
     )
