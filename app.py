@@ -1,6 +1,6 @@
 from datetime import datetime
 from email.Utils import formatdate
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, render_template
 from feeds import FEEDS
 from maya import MayaDT
 from nodb import NoDB
@@ -19,9 +19,11 @@ import uuid
 
 nodb = NoDB()
 nodb.bucket = "lmbda"
-nodb.index = "day"
+nodb.index = "index"
 nodb.serializer = "json"
-nodb.cache = True
+nodb.cache = False
+# nodb.human_readable_indexes = True
+# nodb.cache = True
 
 ##
 # Flask
@@ -32,14 +34,28 @@ app = Flask(__name__)
 @app.route('/')
 def hello():
     """ """
-    return "Please supply a feed name!"
+    return render_template('hello.html')
 
 @app.route('/record/', methods=["POST"])
 def record():
-    """ Record a Glance. """
+    """
+    Record a Glance.
+
+    A record looks like this:
+
+    {
+        "index": "01-01-2017",
+        "urls": {
+            "https://derp.biz": {
+                "description": "Herb Derpington's Top 10 Derps",
+                "glances": 420
+            }
+        }
+    }
+    """
 
     record = request.get_json()
-    if not record.has_key("url") or not record.has_key("title"):
+    if not record or not record.has_key("url") or not record.has_key("title"):
         return app.response_class(
             response={
                 "fail": "POST must have `url` and `title`"
@@ -51,19 +67,20 @@ def record():
     url = record['url']
     title = record['title']
 
-    today = datetime.now().day + datetime.now().month + datetime.now().year
-    loaded = nodb.load(today, default={})
-    if loaded.has_key(url):
-        loaded[url]["glances"] = loaded[url]["glances"] + 1
+    index = calculate_index()
+    loaded = nodb.load(index, default=get_loaded_default())
+    if loaded['urls'].has_key(url):
+        loaded['urls'][url]["glances"] = loaded['urls'][url]["glances"] + 1
     else:
-        loaded[url]["glances"] = 1
-        loaded[url]["title"] = title
-    nodb.save(today, loaded)
+        loaded['urls'][url] = {}
+        loaded['urls'][url]["glances"] = 1
+        loaded['urls'][url]["title"] = title
+    nodb.save(index, loaded)
 
     return app.response_class(
-        response={
+        response=json.dumps({
             "success": True
-            },
+            }),
         status=200,
         mimetype='application/json'
     )
@@ -72,11 +89,11 @@ def record():
 def popular():
     """ Returns a feed of the most read articles over the past 24 hours. """
 
-    today = datetime.now().day + datetime.now().month + datetime.now().year
-    loaded = nodb.load(today, default={})
+    index = calculate_index()
+    loaded = nodb.load(index, default=get_loaded_default())
 
     return app.response_class(
-        response=loaded,
+        response=json.dumps(loaded),
         status=200,
         mimetype='application/json'
     )
@@ -85,7 +102,7 @@ def popular():
 def recent():
     """ Returns a feed of the most recently read articles. """
     return app.response_class(
-        response=[],
+        response=json.dumps([]),
         status=200,
         mimetype='application/json'
     )
@@ -149,6 +166,14 @@ def parse_feeds(feed_list):
 ##
 # Util
 ##
+
+def calculate_index():
+    """ """
+    return str(datetime.now().day) + '-' + str(datetime.now().month) + '-' +  str(datetime.now().year)
+
+def get_loaded_default():
+    """ """
+    return {"index": calculate_index(), "urls": {}}
 
 def convert_time(o):
     """ Takes a struct_time, returns an RFC 2822 """
