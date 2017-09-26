@@ -75,7 +75,7 @@ def record():
         loaded['urls'][url] = {}
         loaded['urls'][url]["glances"] = 1
         loaded['urls'][url]["title"] = title
-    nodb.save(index, loaded)
+    nodb.save(loaded, index)
 
     return app.response_class(
         response=json.dumps({
